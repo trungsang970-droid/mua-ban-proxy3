@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy Trung Sang - Hệ thống quản lý</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#7c3aed',
+                        accent: '#0ea5e9',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        dark: '#0f172a',
+                        light: '#f8fafc'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Segoe UI', 'Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass {
+                background: rgba(255, 255, 255, 0.85);
+                backdrop-filter: blur(16px);
+                border: 1px solid rgba(255, 255, 255, 0.4);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            }
+            .glass-dark {
+                background: rgba(15, 23, 42, 0.75);
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            }
+            .hover-up {
+                transition: all 0.4s ease;
+            }
+            .hover-up:hover {
+                transform: translateY(-6px);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            }
+            .fade-in {
+                animation: fadeIn 0.5s ease forwards;
+            }
+            .slide-up {
+                animation: slideUp 0.4s ease forwards;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .scrollbar-thin::-webkit-scrollbar {
+                width: 6px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 10px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 10px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 min-h-screen text-gray-800">
+
+    <!-- Thông báo hệ thống -->
+    <div id="thongBao" class="fixed top-6 right-6 z-[9999] transition-transform duration-300 translate-x-96 max-w-sm w-full"></div>
+
+    <!-- Màn hình Đăng nhập / Đăng ký -->
+    <div id="manHinhDangNhap" class="fixed inset-0 flex items-center justify-center p-4 fade-in">
+        <div class="glass rounded-[2rem] p-8 w-full max-w-md slide-up">
+            <h2 class="text-4xl md:text-5xl font-bold text-center text-gray-900 mb-8">PROXY VIP V2</h2>
+
+            <!-- Form Đăng nhập -->
+            <div id="formDangNhap">
+                <div class="mb-5">
+                    <label class="block text-base font-medium text-gray-700 mb-2">Tên tài khoản</label>
+                    <input type="text" id="tenDN" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/60 bg-white/95" placeholder="Nhập tên tài khoản">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-base font-medium text-gray-700 mb-2">Mật khẩu</label>
+                    <input type="password" id="mkDN" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/60 bg-white/95" placeholder="Nhập mật khẩu">
+                </div>
+                <button onclick="xuLyDangNhap()" class="w-full bg-primary hover:bg-primary/90 text-white py-3.5 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all mb-6">Đăng nhập</button>
+                <p class="text-center text-gray-700 text-lg">Chưa có tài khoản? <a href="#" onclick="chuyenForm('dangky')" class="text-secondary font-bold hover:underline">Đăng ký ngay</a></p>
+            </div>
+
+            <!-- Form Đăng ký -->
+            <div id="formDangKy" class="hidden">
+                <div class="mb-5">
+                    <label class="block text-base font-medium text-gray-700 mb-2">Tên tài khoản</label>
+                    <input type="text" id="tenDK" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary/60 bg-white/95" placeholder="Tên không trùng lặp">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-base font-medium text-gray-700 mb-2">Mật khẩu</label>
+                    <input type="password" id="mkDK" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary/60 bg-white/95" placeholder="Ít nhất 6 ký tự">
+                </div>
+                <button onclick="xuLyDangKy()" class="w-full bg-secondary hover:bg-secondary/90 text-white py-3.5 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all mb-6">Tạo tài khoản</button>
+                <p class="text-center text-gray-700 text-lg">Đã có tài khoản? <a href="#" onclick="chuyenForm('dangnhap')" class="text-primary font-bold hover:underline">Đăng nhập</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nội dung chính người dùng -->
+    <div id="noiDungChinh" class="hidden max-w-7xl mx-auto px-4 py-8 fade-in">
+
+        <!-- Nút vào Admin -->
+        <button onclick="moDangNhapAdmin()" class="fixed top-6 right-6 z-40 glass-dark hover:bg-dark/90 text-white px-4 py-2 rounded-lg shadow-lg hover-up">
+            <i class="fa fa-shield mr-1"></i> Quản trị
+        </button>
+
+        <!-- Thông tin tài khoản -->
+        <div class="glass rounded-2xl p-6 mb-8 hover-up">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <h3 class="text-xl text-gray-700">Chào bạn <span id="tenHienTai" class="font-bold text-primary text-2xl"></span></h3>
+                    <p class="text-lg mt-2">Số dư: <span id="soDuHienTai" class="font-bold text-success text-2xl">0đ</span></p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="moFormNapTien()" class="bg-success hover:bg-success/90 text-white px-5 py-2 rounded-lg shadow hover-up">
+                        <i class="fa fa-credit-card mr-1"></i> Nạp tiền
+                    </button>
+                    <button onclick="dangXuat()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">
+                        <i class="fa fa-sign-out mr-1"></i> Đăng xuất
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách gói -->
+        <div class="grid md:grid-cols-3 gap-6 mb-10">
+            <div class="glass rounded-xl p-5 border-t-4 border-primary hover-up">
+                <h3 class="text-xl font-bold text-center mb-3">Gói Ngày</h3>
+                <p class="text-3xl font-bold text-center text-primary mb-4">30.000đ</p>
+                <ul class="space-y-2 mb-5 text-gray-600">
+                    <li><i class="fa fa-check text-success mr-2"></i>24 giờ sử dụng</li>
+                    <li><i class="fa fa-check text-success mr-2"></i>Tốc độ ổn định</li>
+                </ul>
+                <button onclick="muaGoi('ngay', 30000)" class="w-full bg-primary hover:bg-primary/90 text-white py-2.5 rounded-lg font-medium">Mua ngay</button>
+            </div>
+            <div class="glass rounded-xl p-5 border-t-4 border-secondary hover-up">
+                <h3 class="text-xl font-bold text-center mb-3">Gói Tuần</h3>
+                <p class="text-3xl font-bold text-center text-secondary mb-4">125.000đ</p>
+                <ul class="space-y-2 mb-5 text-gray-600">
+                    <li><i class="fa fa-check text-success mr-2"></i>7 ngày sử dụng</li>
+                    <li><i class="fa fa-check text-success mr-2"></i>Tốc độ cao</li>
+                </ul>
+                <button onclick="muaGoi('tuan', 125000)" class="w-full bg-secondary hover:bg-secondary/90 text-white py-2.5 rounded-lg font-medium">Mua ngay</button>
+            </div>
+            <div class="glass rounded-xl p-5 border-t-4 border-accent hover-up">
+                <h3 class="text-xl font-bold text-center mb-3">Gói Tháng</h3>
+                <p class="text-3xl font-bold text-center text-accent mb-4">250.000đ</p>
+                <ul class="space-y-2 mb-5 text-gray-600">
+                    <li><i class="fa fa-check text-success mr-2"></i>30 ngày sử dụng</li>
+                    <li><i class="fa fa-check text-success mr-2"></i>Ổn định tuyệt đối</li>
+                </ul>
+                <button onclick="muaGoi('thang', 250000)" class="w-full bg-accent hover:bg-accent/90 text-white py-2.5 rounded-lg font-medium">Mua ngay</button>
+            </div>
+        </div>
+
+        <!-- Lịch sử & Đơn hàng -->
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="glass rounded-xl p-5 hover-up">
+                <h3 class="text-lg font-semibold mb-4 border-b pb-2">📋 Lịch sử & Key</h3>
+                <div id="khungLichSu" class="max-h-64 overflow-y-auto scrollbar-thin">
+                    <p class="text-gray-500 text-center py-6">Chưa có giao dịch</p>
+                </div>
+            </div>
+            <div class="glass rounded-xl p-5 hover-up">
+                <h3 class="text-lg font-semibold mb-4 border-b pb-2">🛒 Đơn hàng đã mua</h3>
+                <div id="khungDonHang" class="max-h-64 overflow-y-auto scrollbar-thin">
+                    <p class="text-gray-500 text-center py-6">Chưa có đơn hàng</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nạp tiền -->
+    <div id="modalNapTien" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 fade-in">
+        <div class="glass rounded-2xl p-6 w-full max-w-md slide-up">
+            <h3 class="text-xl font-bold text-center mb-5">Nạp tiền vào tài khoản</h3>
+            <div class="flex gap-2 mb-5">
+                <button onclick="chuyenTabNap('ck')" id="tabCK" class="flex-1 py-2 rounded-lg bg-primary text-white">Chuyển khoản</button>
+                <button onclick="chuyenTabNap('the')" id="tabThe" class="flex-1 py-2 rounded-lg bg-gray-200 text-gray-700">Thẻ cào</button>
+            </div>
+            <div id="formCK">
+                <input type="number" id="soTienNap" min="40000" step="1000" class="w-full px-3 py-2 border rounded-lg mb-4" placeholder="Số tiền tối thiểu 40.000đ">
+                <div class="bg-blue-50 p-3 rounded-lg mb-4">
+                    <p><strong>Ngân hàng:</strong> MB Bank</p>
+                    <p><strong>Số TK:</strong> 0372822927</p>
+                    <p><strong>Chủ TK:</strong> Trần Trung Sang</p>
+                    <p><strong>Nội dung:</strong> <span id="ndCK"></span></p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="guiYeuCauNap()" class="flex-1 bg-success text-white py-2 rounded-lg">Gửi yêu cầu</button>
+                    <button onclick="dongModal('modalNapTien')" class="flex-1 bg-gray-300 py-2 rounded-lg">Đóng</button>
+                </div>
+            </div>
+            <div id="formThe" class="hidden space-y-3">
+                <select id="loaiThe" class="w-full px-3 py-2 border rounded-lg">
+                    <option value="">-- Chọn loại thẻ --</option>
+                    <option value="Viettel">Viettel</option>
+                    <option value="Vinaphone">Vinaphone</option>
+                    <option value="Mobifone">Mobifone</option>
+                </select>
+                <input type="text" id="seriThe" class="w-full px-3 py-2 border rounded-lg" placeholder="Số Seri">
+                <input type="text" id="maThe" class="w-full px-3 py-2 border rounded-lg" placeholder="Mã thẻ">
+                <select id="menhGiaThe" class="w-full px-3 py-2 border rounded-lg">
+                    <option value="">-- Chọn mệnh giá --</option>
+                    <option value="20000">20.000đ</option>
+                    <option value="50000">50.000đ</option>
+                    <option value="100000">100.000đ</option>
+                    <option value="200000">200.000đ</option>
+                </select>
+                <div class="flex gap-3 mt-3">
+                    <button onclick="guiYeuCauThe()" class="flex-1 bg-success text-white py-2 rounded-lg">Gửi thẻ</button>
+                    <button onclick="dongModal('modalNapTien')" class="flex-1 bg-gray-300 py-2 rounded-lg">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Đăng nhập Admin -->
+    <div id="modalDangNhapAdmin" class="fixed inset-0 bg-black/70 z-[999] hidden flex items-center justify-center p-4 fade-in">
+        <div class="glass rounded-2xl p-6 w-full max-w-xs slide-up">
+            <h3 class="text-xl font-bold text-center mb-4">🔒 Truy cập Admin</h3>
+            <input type="password" id="mkAdmin" class="w-full px-3 py-2 border rounded-lg mb-4" placeholder="Mật khẩu Admin">
+            <button onclick="kiemTraAdmin()" class="w-full bg-dark text-white py-2.5 rounded-lg mb-3">Vào hệ thống</button>
+            <button onclick="dongModal('modalDangNhapAdmin')" class="w-full bg-gray-300 py-2 rounded-lg">Đóng</button>
+        </div>
+    </div>
+
+    <!-- Trang Quản trị Admin -->
+    <div id="trangAdmin" class="hidden max-w-7xl mx-auto px-4 py-8 fade-in">
+        <div class="glass-dark rounded-2xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">TRANG QUẢN LÝ ADMIN</h2>
+                <button onclick="thoatAdmin()" class="bg-danger text-white px-4 py-2 rounded-lg">Thoát</button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white/10 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold text-white mb-3">💰 Nạp chuyển khoản chờ duyệt</h4>
+                    <div id="dsYeuCauCK" class="max-h-60 overflow-y-auto scrollbar-thin text-sm"></div>
+                </div>
+                <div class="bg-white/10 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold text-white mb-3">🎫 Nạp thẻ cào chờ duyệt</h4>
+                    <div id="dsYeuCauThe" class="max-h-60 overflow-y-auto scrollbar-thin text-sm"></div>
+                </div>
+                <div class="md:col-span-2 bg-white/10 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold text-white mb-3">🔑 Đơn hàng chờ gửi Key</h4>
+                    <div id="dsDonHang" class="max-h-60 overflow-y-auto scrollbar-thin text-sm"></div>
+                </div>
+            </div>
+            <div class="bg-white/10 p-4 rounded-lg">
+                <h4 class="text-lg font-semibold text-white mb-3">📋 Lịch sử hệ thống</h4>
+                <div class="grid md:grid-cols-2 gap-4 text-sm text-gray-200">
+                    <div><strong>Tạo tài khoản:</strong> <div id="lsTaoTK" class="max-h-40 overflow-y-auto mt-1"></div></div>
+                    <div><strong>Mua hàng:</strong> <div id="lsMua" class="max-h-40 overflow-y-auto mt-1"></div></div>
+                    <div><strong>Nạp thành công:</strong> <div id="lsNapOk" class="max-h-40 overflow-y-auto mt-1"></div></div>
+                    <div><strong>Nạp bị huỷ:</strong> <div id="lsNapHuy" class="max-h-40 overflow-y-auto mt-1"></div></div>
+                    <div><strong>Nhận Key:</strong> <div id="lsNhanKey" class="max-h-40 overflow-y-auto mt-1"></div></div>
+                    <div><strong>Trừ tiền:</strong> <div id="lsTruTien" class="max-h-40 overflow-y-auto mt-1"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dữ liệu hệ thống
+        let danhSachTaiKhoan = JSON.parse(localStorage.getItem('proxyUsers')) || [];
+        let yeuCauNapCK = JSON.parse(localStorage.getItem('proxyCK')) || [];
+        let yeuCauNapThe = JSON.parse(localStorage.getItem('proxyThe')) || [];
+        let donHang = JSON.parse(localStorage.getItem('proxyOrders')) || [];
+        let lichSuTaoTK = JSON.parse(localStorage.getItem('lsTaoTK')) || [];
+        let lichSuMua = JSON.parse(localStorage.getItem('lsMua')) || [];
+        let lichSuNapOk = JSON.parse(localStorage.getItem('lsNapOk')) || [];
+        let lichSuNapHuy = JSON.parse(localStorage.getItem('lsNapHuy')) || [];
+        let lichSuNhanKey = JSON.parse(localStorage.getItem('lsKey')) || [];
+        let lichSuTruTien = JSON.parse(localStorage.getItem('lsTru')) || [];
+        let nguoiDungHienTai = null;
+        const MAT_KHAU_ADMIN = "DHFHVNSI";
+
+        // Thông báo
+        function thongBao(noiDung, loai = 'success') {
+            const khung = document.getElementById('thongBao');
+            const mau = loai === 'success' ? 'bg-green-500' : loai === 'warn' ? 'bg-amber-500' : 'bg-red-500';
+            khung.innerHTML = `<div class="${mau} text-white p-3 rounded-lg shadow">${noiDung}</div>`;
+            khung.classList.remove('translate-x-96');
+            setTimeout(() => khung.classList.add('translate-x-96'), 3500);
+        }
+
+        // Chuyển form đăng nhập/đăng ký
+        function chuyenForm(loai) {
+            document.getElementById('formDangNhap').classList.toggle('hidden', loai !== 'dangnhap');
+            document.getElementById('formDangKy').classList.toggle('hidden', loai !== 'dangky');
+        }
+
+        // Chuyển tab nạp tiền
+        function chuyenTabNap(loai) {
+            if (loai === 'ck') {
+                document.getElementById('tabCK').classList.add('bg-primary', 'text-white');
+                document.getElementById('tabCK').classList.remove('bg-gray-200', 'text-gray-700');
+                document.getElementById('tabThe').classList.remove('bg-primary', 'text-white');
+                document.getElementById('tabThe').classList.add('bg-gray-200', 'text-gray-700');
+                document.getElementById('formCK').classList.remove('hidden');
+                document.getElementById('formThe').classList.add('hidden');
+            } else {
+                document.getElementById('tabThe').classList.add('bg-primary', 'text-white');
+                document.getElementById('tabThe').classList.remove('bg-gray-200', 'text-gray-700');
+                document.getElementById('tabCK').classList.remove('bg-primary', 'text-white');
+                document.getElementById('tabCK').classList.add('bg-gray-200', 'text-gray-700');
+                document.getElementById('formThe').classList.remove('hidden');
+                document.getElementById('formCK').classList.add('hidden');
+            }
+        }
+
+        function moModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function dongModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // Xử lý đăng ký
+        function xuLyDangKy() {
+            const ten = document.getElementById('tenDK').value.trim();
+            const mk = document.getElementById('mkDK').value.trim();
+            if (!ten || !mk) return thongBao('Điền đủ tên và mật khẩu', 'warn');
+            if (mk.length < 6) return thongBao('Mật khẩu ít nhất 6 ký tự', 'warn');
+            if (danhSachTaiKhoan.find(u => u.ten.toLowerCase() === ten.toLowerCase()))
+                return thongBao('Tên tài khoản đã tồn tại', 'error');
+            
+            const tkMoi = { ten, mk, soDu: 0, keys: [] };
+            danhSachTaiKhoan.push(tkMoi);
+            lichSuTaoTK.unshift({
+                ten: ten,
+                stt: Math.floor(Math.random() * 999999),
+                thoiGian: new Date().toLocaleString('vi-VN')
+            });
+            localStorage.setItem('proxyUsers', JSON.stringify(danhSachTaiKhoan));
+            localStorage.setItem('lsTaoTK', JSON.stringify(lichSuTaoTK));
+            thongBao('Tạo tài khoản thành công!');
+            chuyenForm('dangnhap');
+        }
+
+        // Xử lý đăng nhập
+        function xuLyDangNhap() {
+            const ten = document.getElementById('tenDN').value.trim();
+            const mk = document.getElementById('mkDN').value.trim();
+            if (!ten || !mk) return thongBao('Điền đủ thông tin', 'warn');
+            const tk = danhSachTaiKhoan.find(u => u.ten === ten && u.mk === mk);
+            if (!tk) return thongBao('Tên hoặc mật khẩu không đúng', 'error');
+            
+            nguoiDungHienTai = tk;
+            document.getElementById('tenHienTai').textContent = tk.ten;
+            document.getElementById('soDuHienTai').textContent = `${tk.soDu.toLocaleString('vi-VN')}đ`;
+            document.getElementById('ndCK').textContent = tk.ten;
+            document.getElementById('manHinhDangNhap').classList.add('hidden');
+            document.getElementById('noiDungChinh').classList.remove('hidden');
+            capNhatGiaoDien();
+            thongBao('Đăng nhập thành công!');
+        }
+
+        function dangXuat() {
+            nguoiDungHienTai = null;
+            document.getElementById('noiDungChinh').classList.add('hidden');
+            document.getElementById('trangAdmin').classList.add('hidden');
+            document.getElementById('manHinhDangNhap').classList.remove('hidden');
+        }
+
+        function moFormNapTien() {
+            document.getElementById('soTienNap').value = '';
+            document.getElementById('loaiThe').value = '';
+            document.getElementById('seriThe').value = '';
+            document.getElementById('maThe').value = '';
+            document.getElementById('menhGiaThe').value = '';
+            chuyenTabNap('ck');
+            moModal('modalNapTien');
+        }
+
+        function guiYeuCauNap() {
+            const tien = parseInt(document.getElementById('soTienNap').value);
+            if (!tien || tien < 40000) return thongBao('Tối thiểu 40.000đ', 'warn');
+            yeuCauNapCK.unshift({
+                id: Date.now(),
+                ten: nguoiDungHienTai.ten,
+                soTien: tien,
+                trangThai: 'cho',
+                thoiGian: new Date().toLocaleString('vi-VN')
+            });
+            localStorage.setItem('proxyCK', JSON.stringify(yeuCauNapCK));
+            dongModal('modalNapTien');
+            thongBao('Đã gửi yêu cầu nạp tiền!');
+        }
+
+        function guiYeuCauThe() {
+            const loai = document.getElementById('loaiThe').value;
+            const seri = document.getElementById('seriThe').value.trim();
+            const ma = document.getElementById('maThe').value.trim();
+            const gia = parseInt(document.getElementById('menhGiaThe').value);
+            if (!loai || !seri || !ma || !gia) return thongBao('Điền đủ thông tin thẻ', 'warn');
+            yeuCauNapThe.unshift({
+                id: Date.now(),
+                ten: nguoiDungHienTai.ten,
+                loai, seri, ma, gia,
+                trangThai: 'cho',
+                thoiGian: new Date().toLocaleString('vi-VN')
+            });
+            localStorage.setItem('proxyThe', JSON.stringify(yeuCauNapThe));
+            dongModal('modalNapTien');
+            thongBao('Đã gửi thẻ, chờ duyệt!');
+        }
+
+        function muaGoi(loai, gia) {
+            if (!nguoiDungHienTai) return thongBao('Chưa đăng nhập', 'error');
+            if (nguoiDungHienTai.soDu < gia) return thongBao('Số dư không đủ', 'warn');
+            
+            nguoiDungHienTai.soDu -= gia;
+            lichSuTruTien.unshift({
+                ten: nguoiDungHienTai.ten,
+                soTien: gia,
+                noiDung: `Mua gói ${loai}`,
+                thoiGian: new Date().toLocaleString('vi-VN')
+            });
+            const donMoi = {
+                id: Date.now(),
+                ten: nguoiDungHienTai.ten,
+                loai, gia,
+                trangThai: 'cho_key',
+                thoiGian: new Date().toLocaleString('vi-VN')
+            };
+            donHang.unshift(donMoi);
+            lichSuMua.unshift({
+                ten: nguoiDungHienTai.ten,
+                loai, gia,
+                thoiGian: new Date().toLocaleString('vi-VN')
+            });
+            localStorage.setItem('proxyUsers', JSON.stringify(danhSachTaiKhoan));
+            localStorage.setItem('proxyOrders', JSON.stringify(donHang));
+            localStorage.setItem('lsMua', JSON.stringify(lichSuMua));
+            localStorage.setItem('lsTru', JSON.stringify(lichSuTruTien));
+            document.getElementById('soDuHienTai').textContent = `${nguoiDungHienTai.soDu.toLocaleString('vi-VN')}đ`;
+            capNhatGiaoDien();
+            thongBao('Mua thành công, chờ gửi key!');
+        }
+
+        function capNhatGiaoDien() {
+            const dsDon = donHang.filter(d => d.ten === nguoiDungHienTai.ten);
+            document.getElementById('khungDonHang').innerHTML = dsDon.length ? dsDon.map(d => `
+                <div class="border-b py-2">
+                    <p><strong>Gói:</strong> ${d.loai} - ${d.gia.toLocaleString('vi-VN')}đ</p>
+                    <p><strong>Trạng thái:</strong> ${d.trangThai === 'da_key' ? '<span class="text-success">Đã nhận key</span>' : '<span class="text-warning">Chờ key</span>'}</p>
+                    ${d.key ? `<p><strong>Key:</strong> ${d.key}</p>` : ''}
+                    <p class="text-xs text-gray-500">${d.thoiGian}</p>
+                </div>`).join('') : '<p class="text-gray-500">Chưa có đơn hàng</p>';
+        }
+
+        function moDangNhapAdmin() { moModal('modalDangNhapAdmin'); }
+        function kiemTraAdmin() {
+            const mk = document.getElementById('mkAdmin').value.trim();
+            if (mk !== MAT_KHAU_ADMIN) return thongBao('Mật khẩu sai', 'error');
+            dongModal('modalDangNhapAdmin');
+            document.getElementById('noiDungChinh').classList.add('hidden');
+            document.getElementById('trangAdmin').classList.remove('hidden');
+            taiDuLieuAdmin();
+        }
+
+        function thoatAdmin() {
+            document.getElementById('trangAdmin').classList.add('hidden');
+            document.getElementById('noiDungChinh').classList.remove('hidden');
+            if (nguoiDungHienTai) capNhatGiaoDien();
+        }
+
+        function taiDuLieuAdmin() {
+            document.getElementById('dsYeuCauCK').innerHTML = yeuCauNapCK.filter(i => i.trangThai === 'cho').map(i => `
+                <div class="bg-white/20 p-2 rounded mb-2">
+                    <p>${i.ten} - ${i.soTien.toLocaleString('vi-VN')}đ</p>
+                    <button onclick="dongYCK(${i.id})" class="bg-success text-white px-2 py-1 rounded text-xs mr-1">Đồng ý</button>
+                    <button onclick="tuChoiCK(${i.id})" class="bg-danger text-white px-2 py-1 rounded text-xs">Từ chối</button>
+                </div>`).join('') || '<p class="text-gray-300">Không có yêu cầu</p>';
+
+            document.getElementById('dsYeuCauThe').innerHTML = yeuCauNapThe.filter(i => i.trangThai === 'cho').map(i => `
+                <div class="bg-white/20 p-2 rounded mb-2">
+                    <p>${i.ten} - ${i.loai} ${i.gia.toLocaleString('vi-VN')}đ</p>
+                    <p>Seri: ${i.seri} | Mã: ${i.ma}</p>
+                    <button onclick="dongYThe(${i.id})" class="bg-success text-white px-2 py-1 rounded text-xs mr-1">Đồng ý</button>
+                    <button onclick="tuChoiThe(${i.id})" class="bg-danger text-white px-2 py-1 rounded text-xs">Từ chối</button>
+                </div>`).join('') || '<p class="text-gray-300">Không có yêu cầu</p>';
+
+            document.getElementById('dsDonHang').innerHTML = donHang.filter(i => i.trangThai === 'cho_key').map(i => `
+                <div class="bg-white/20 p-2 rounded mb-2">
+                    <p>${i.ten} - Gói ${i.loai} - ${i.gia.toLocaleString('vi-VN')}đ</p>
+                    <input type="text" id="key_${i.id}" placeholder="Nhập key" class="w-full p-1 rounded text-black my-1">
+                    <button onclick="guiKey(${i.id})" class="bg-primary text-white px-2 py-1 rounded text-xs">Gửi key</button>
+                </div>`).join('') || '<p class="text-gray-300">Không có đơn hàng</p>';
+
+            document.getElementById('lsTaoTK').innerHTML = lichSuTaoTK.map(i => `<div>${i.stt} - ${i.ten} - ${i.thoiGian}</div>`).join('') || 'Chưa có dữ liệu';
+            document.getElementById('lsMua').innerHTML = lichSuMua.map(i => `<div>${i.ten} - ${i.loai} - ${i.gia.toLocaleString('vi-VN')}đ - ${i.thoiGian}</div>`).join('') || 'Chưa có dữ liệu';
+            document.getElementById('lsNapOk').innerHTML = lichSuNapOk.map(i => `<div>${i.ten} - ${i.soTien.toLocaleString('vi-VN')}đ - ${i.thoiGian}</div>`).join('') || 'Chưa có dữ liệu';
+            document.getElementById('lsNapHuy').innerHTML = lichSuNapHuy.map(i => `<div>${i.ten} - ${i.soTien.toLocaleString('vi-VN')}đ - ${i.lyDo} - ${i.thoiGian}</div>`).join('') || 'Chưa có dữ liệu';
+            document.getElementById('lsNhanKey').innerHTML = lichSuNhanKey.map(i => `<div>${i.ten} - ${i.loai} - ${i.key} - ${i.thoiGian}</div>`).join('') || 'Chưa có dữ liệu';
+            document.getElementById('lsTruTien').innerHTML = lichSuTruTien.map(i => `<div>${i.ten} - ${i.soTien.toLocaleString('vi-VN')}đ - ${i.noiDung} - ${i.thoiGian}</div>`).join('') || 'Chưa có dữ liệu';
+        }
+
+        function dongYCK(id) {
+            const idx = yeuCauNapCK.findIndex(i => i.id === id);
+            if (idx < 0) return;
+            const yeuCau = yeuCauNapCK[idx];
+            const tk = danhSachTaiKhoan.find(u => u.ten === yeuCau.ten);
+            if (tk) tk.soDu += yeuCau.soTien;
+            yeuCauNapCK[idx].trangThai = 'ok';
+            lichSuNapOk.unshift({
+                ten: yeuCau.ten,
+                soTien: yeuCau.soTien,
+                thoiGian: new Date().toLocaleString('vi-VN')
+            });
+            localStorage.setItem('proxyUsers', JSON.stringify(danhSachTaiKhoan));
+            localStorage.setItem('proxyCK', JSON.stringify(yeuCauNapCK));
+            localStorage.setItem('lsNapOk', JSON.stringify(lichSuNapOk));
+            taiDuLieuAdmin();
+            thongBao('Đã duyệt nạp tiền!');
+        }
+
+        function tuChoiCK(id) {
+            const idx = yeuCauNapCK.findIndex(i => i.id === id);
+            if (idx < 0) return;
+            yeuCauNapCK[idx].trangThai = 'huy';
+            lichSuNapHuy.unshift({
+                ten: yeuCauNapCK[idx].ten,
+                soTien: yeuCauNapCK[idx].soTien,
+                lyDo: 'Admin từ chối',
+                thoiGian: new Date().toLocaleString('vi-VN')
+            });
+            localStorage.setItem('proxyCK', JSON.stringify(yeuCauNapCK));
+            localStorage.setItem('lsNapHuy', JSON.stringify(lichSuNapHuy));
+            taiDuLieuAdmin();
+            thongBao('Đã từ chối yêu cầu!');
+        }
+
+        function dongYThe(id) {
+            const idx = yeuCauNapThe.findIndex(i => i.id === id);
+            if (idx < 0) return;
+            const yeuCau = yeuCauNapThe[idx];
+            const tk = danhSachTaiKhoan.find(u => u.ten === yeuCau.ten);
+            if (tk) tk.soDu += yeuCau.gia;
+            yeuCauNapThe[idx].trangThai = 'ok';
+            lichSuNapOk.unshift({
+                ten: yeuCau.ten,
+                soTien: yeuCau.gia,
+                thoiGian: new Date().toLocaleString('vi-VN')
+            });
+            localStorage.setItem('proxyUsers', JSON.stringify(danhSachTaiKhoan));
+            localStorage.setItem('proxyThe', JSON.stringify(yeuCauNapThe));
+            localStorage.setItem('lsNapOk', JSON.stringify(lichSuNapOk));
+            taiDuLieuAdmin();
+            thongBao('Đã duyệt thẻ cào!');
+        }
+
+        function tuChoiThe(id) {
+            const idx = yeuCauNapThe.findIndex(i => i.id === id);
+            if (idx < 0) return;
+            yeuCauNapThe[idx].trangThai = 'huy';
+            lichSuNapHuy.unshift({
+                ten: yeuCauNapThe[idx].ten,
+                soTien: yeuCauNapThe[idx].gia,
+                lyDo: 'Thẻ sai / không hợp lệ',
+                thoiGian: new Date().toLocaleString('vi-VN')
+            });
+            localStorage.setItem('proxyThe', JSON.stringify(yeuCauNapThe));
+            localStorage.setItem('lsNapHuy', JSON.stringify(lichSuNapHuy));
+            taiDuLieuAdmin();
+            thongBao('Đã từ chối thẻ!');
+        }
+
+        function guiKey(id) {
+            const key = document.getElementById(`key_${id}`).value.trim();
+            if (!key) return thongBao('Nhập key trước khi gửi', 'warn');
+            const idx = donHang.findIndex(i => i.id === id);
+            if (idx < 0) return;
+            donHang[idx].trangThai = 'da_key';
+            donHang[idx].key = key;
+            const tk = danhSachTaiKhoan.find(u => u.ten === donHang[idx].ten);
+            if (tk) tk.keys.push({ loai: donHang[idx].loai, key: key, thoiGian: new Date().toLocaleString('vi-VN') });
+            lichSuNhanKey.unshift({
+                ten: donHang[idx].ten,
+                loai: donHang[idx].loai,
+                key: key,
+                thoiGian: new Date().toLocaleString('vi-VN')
+            });
+            localStorage.setItem('proxyOrders', JSON.stringify(donHang));
+            localStorage.setItem('proxyUsers', JSON.stringify(danhSachTaiKhoan));
+            localStorage.setItem('lsKey', JSON.stringify(lichSuNhanKey));
+            taiDuLieuAdmin();
+            thongBao('Đã gửi key thành công!');
+        }
+    </script>
+</body>
+</html>
